@@ -1,0 +1,2 @@
+"""Streamlit XAI dashboard package."""
+
