@@ -51,14 +51,14 @@ def plot_global_shap_for_class(
     st.pyplot(fig, use_container_width=True)
     plt.close(fig)
 
-    # Bar
-    shap.plots.bar(exp, max_display=12, show=False)
-    fig = plt.gcf()
-    fig.set_size_inches(10, 6)
-    plt.title(f"SHAP Feature Importance - Class {class_idx}")
-    plt.tight_layout()
-    st.pyplot(fig, use_container_width=True)
-    plt.close(fig)
+    # # Bar
+    # shap.plots.bar(exp, max_display=12, show=False)
+    # fig = plt.gcf()
+    # fig.set_size_inches(10, 6)
+    # plt.title(f"SHAP Feature Importance - Class {class_idx}")
+    # plt.tight_layout()
+    # st.pyplot(fig, use_container_width=True)
+    # plt.close(fig)
 
 
 def plot_global_shap_total_bar(feature_cols: list[str], total_mean_abs: np.ndarray) -> None:

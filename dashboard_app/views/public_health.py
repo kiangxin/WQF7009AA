@@ -13,6 +13,40 @@ def public_health_officer_view(explainer, X, X_scaled, feature_cols, y):
         '<div class="info-box">Aggregate local SHAP across multiple instances for population insight.</div>',
         unsafe_allow_html=True,
     )
+    st.markdown(
+        """
+<style>
+.explanation-card {
+    background-color: rgba(248, 249, 250, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.explanation-card h4 {
+    margin: 0 0 10px 0;
+}
+.explanation-card p {
+    margin: 0 0 10px 0;
+}
+.explanation-card p:last-child {
+    margin-bottom: 0;
+}
+</style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    def render_explanation_card(markdown_text: str, title: str = "Top Factors") -> None:
+        st.markdown(
+            f"""
+<div class="explanation-card">
+<h4>{title}</h4>
+{markdown_text}
+</div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     st.markdown("**Restricted to Class 0 only (high risk cases).**")
     selected_class = 0
@@ -89,32 +123,35 @@ def public_health_officer_view(explainer, X, X_scaled, feature_cols, y):
             mean_feature_values = X_sel_original.mean(axis=0).values
 
             st.subheader(f"Aggregated Local SHAP - Class {selected_class} (n={n})")
+            col_plot, col_text = st.columns([2, 1], gap="large")
 
-            # Aggregated waterfall plot
-            exp = shap.Explanation(
-                values=mean_shap,
-                base_values=0.0,
-                data=mean_feature_values,
-                feature_names=feature_cols,
-            )
+            with col_plot:
+                # Aggregated waterfall plot
+                exp = shap.Explanation(
+                    values=mean_shap,
+                    base_values=0.0,
+                    data=mean_feature_values,
+                    feature_names=feature_cols,
+                )
 
-            plt.figure(figsize=(10, 6))
-            shap.plots.waterfall(exp, max_display=len(feature_cols), show=False)
-            fig = plt.gcf()
-            fig.patch.set_facecolor("white")
-            for ax in fig.axes:
-                ax.set_facecolor("white")
-            plt.tight_layout()
-            st.pyplot(fig, use_container_width=True)
-            plt.close(fig)
+                plt.figure(figsize=(10, 6))
+                shap.plots.waterfall(exp, max_display=len(feature_cols), show=False)
+                fig = plt.gcf()
+                fig.patch.set_facecolor("white")
+                for ax in fig.axes:
+                    ax.set_facecolor("white")
+                plt.tight_layout()
+                st.pyplot(fig, use_container_width=True)
+                plt.close(fig)
 
-            # Quick summary table (light theme, no dark chart)
-            df_imp = (
-                pd.DataFrame({"Feature": feature_cols, "Mean SHAP": mean_shap})
-                .assign(AbsMeanSHAP=lambda d: d["Mean SHAP"].abs())
-                .sort_values("AbsMeanSHAP", ascending=False)
-                .drop(columns=["AbsMeanSHAP"])
-            )
-            st.markdown("**Top factors (by |mean SHAP|):**")
-            st.dataframe(df_imp.head(10), use_container_width=True)
+            with col_text:
+                # Quick summary table (light theme, no dark chart)
+                df_imp = (
+                    pd.DataFrame({"Feature": feature_cols, "Mean SHAP": mean_shap})
+                    .assign(AbsMeanSHAP=lambda d: d["Mean SHAP"].abs())
+                    .sort_values("AbsMeanSHAP", ascending=False)
+                    .drop(columns=["AbsMeanSHAP"])
+                )
+                render_explanation_card("<p><strong>Top factors (by |mean SHAP|)</strong></p>")
+                st.dataframe(df_imp.head(10), use_container_width=True)
 

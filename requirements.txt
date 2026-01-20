@@ -11,3 +11,4 @@ streamlit>=1.25.0
 jupyter>=1.0.0
 notebook>=6.5.0
 dice_ml==0.12
+imblearn>=0.10.0

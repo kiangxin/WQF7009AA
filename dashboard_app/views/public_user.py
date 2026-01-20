@@ -15,6 +15,40 @@ def public_user_view(explainer, X, X_scaled, feature_cols, model):
         '<div class="info-box">Understand your personal health risk based on current air quality conditions.</div>',
         unsafe_allow_html=True,
     )
+    st.markdown(
+        """
+<style>
+.explanation-card {
+    background-color: rgba(248, 249, 250, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.explanation-card h4 {
+    margin: 0 0 10px 0;
+}
+.explanation-card p {
+    margin: 0 0 10px 0;
+}
+.explanation-card p:last-child {
+    margin-bottom: 0;
+}
+</style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    def render_explanation_card(markdown_text: str, title: str = "Simple Explanation") -> None:
+        st.markdown(
+            f"""
+<div class="explanation-card">
+<h4>{title}</h4>
+{markdown_text}
+</div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     st.subheader("Check Your Health Risk")
     user_idx_raw = st.text_input(
@@ -73,14 +107,6 @@ def public_user_view(explainer, X, X_scaled, feature_cols, model):
             )
 
             st.subheader("📊 Why This Risk Level?")
-            shap.plots.waterfall(local_exp, max_display=len(feature_cols), show=False)
-            fig = plt.gcf()
-            fig.set_size_inches(10, 6)
-            plt.tight_layout()
-            st.pyplot(fig, use_container_width=True)
-            plt.close(fig)
-
-            st.subheader("🔍 Simple Explanation")
             feature_impacts = pd.DataFrame(
                 {
                     "Feature": feature_cols,
@@ -100,10 +126,21 @@ def public_user_view(explainer, X, X_scaled, feature_cols, model):
             advice_text = hint.get("advice", "monitor air quality conditions and follow public health guidance")
 
             direction = "increases" if top_impact > 0 else "decreases"
-            st.markdown(
-                f"**Main Reason:** Predicted **Class {pred_class}** mainly because **{top_feature}** "
-                f"({top_value:.2f}) **{direction}** the health impact (SHAP: {top_impact:+.4f})."
-            )
-            st.markdown(f"- **Why**: {reason_text}.")
-            st.markdown(f"- **What you can do**: {advice_text}.")
+            col_plot, col_text = st.columns([2, 1], gap="large")
+            with col_plot:
+                shap.plots.waterfall(local_exp, max_display=len(feature_cols), show=False)
+                fig = plt.gcf()
+                fig.set_size_inches(10, 6)
+                plt.tight_layout()
+                st.pyplot(fig, use_container_width=True)
+                plt.close(fig)
+            with col_text:
+                render_explanation_card(
+                    f"""
+<p><strong>Main Reason:</strong> Predicted <strong>Class {pred_class}</strong> mainly because <strong>{top_feature}</strong>
+({top_value:.2f}) <strong>{direction}</strong> the health impact (SHAP: {top_impact:+.4f}).</p>
+<p><strong>Why:</strong> {reason_text}.</p>
+<p><strong>What you can do:</strong> {advice_text}.</p>
+                    """
+                )
 
